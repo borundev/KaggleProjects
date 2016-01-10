@@ -3,11 +3,17 @@ import numpy as np
 import csv as csv
 
 from sklearn.datasets import make_blobs
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.metrics import log_loss
 from sklearn import cross_validation
 from sklearn.cross_validation import KFold
+from sklearn.ensemble import (RandomTreesEmbedding, RandomForestClassifier,
+                              GradientBoostingClassifier)
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.cross_validation import train_test_split
+from sklearn.metrics import roc_curve
+from sklearn.pipeline import make_pipeline
+from sklearn.linear_model import LogisticRegression
 
 # Data cleanup
 # TRAIN DATA
@@ -81,7 +87,39 @@ test_data = test_df.values
 
 print 'Training...'
 
-# forest = RandomForestClassifier(n_estimators = 100)
+#fifthforest
+# rf = RandomForestClassifier(n_estimators = 100)
+# rf_enc = OneHotEncoder()
+# rf_lm = LogisticRegression()
+# rf = rf.fit( train_data[0::,1::], train_data[0::,0] )
+# rf_enc.fit(rf.apply(train_data[0::,1::]))
+X_train = train_data[0::,1::]
+y_train = train_data[0::,0]
+X_test = test_data
+X_train, X_train_lr, y_train, y_train_lr = train_test_split(X_train,
+                                                            y_train,
+                                                            test_size=0.5)
+# rf_lm.fit(rf_enc.transform(rf.apply(X_train_lr)), y_train_lr)
+
+# y_pred_rf_lm = rf_lm.predict_proba(rf_enc.transform(rf.apply(X_test)))[:, 1]
+
+#sixthforestt
+n_estimator = 10
+grd = GradientBoostingClassifier(n_estimators=n_estimator)
+grd_enc = OneHotEncoder()
+grd_lm = LogisticRegression()
+grd.fit(X_train, y_train)
+grd_enc.fit(grd.apply(X_train)[:, :, 0])
+grd_lm.fit(grd_enc.transform(grd.apply(X_train_lr)[:, :, 0]), y_train_lr)
+
+
+# output = grd_lm.predict(test_data).astype(int)
+#output = rf_lm.predict(rf_enc.transform(rf.apply(X_test))).astype(int)
+output = grd_lm.predict(grd_enc.transform(grd.apply(X_test)[:, :, 0])).astype(int)
+
+
+'''
+#secondforest (in git)
 train_size = int(0.7*(train_data.shape[0]))
 validation_size = train_data.shape[0] - train_size
 
@@ -96,16 +134,29 @@ sig_clf = CalibratedClassifierCV(clf, method = "sigmoid", cv="prefit")
 sig_clf.fit(X_validation, Y_validation)
 
 print 'Predicting...'
-output = sig_clf.predict(test_data).astype(int)
+#output = sig_clf.predict(test_data).astype(int)
+'''
 
-kf = KFold(4, n_folds=2)
-for train,test in kf:
-	print ("%s %s %(train,test))
+'''
+#thirdforest
+X = train_data[0::,1::]
+y = train_data[0::,0]
+k_fold = KFold(10, n_folds=3)
+for k, (train,test) in enumerate(k_fold):
+    forest.fit(X[train], y[train])
+output = forest.predict(test_data).astype(int)
+'''
+'''
+#fourthforest.csv
+original_params = {'n_estimators': 1000, 'max_leaf_nodes': 4, 'max_depth': None, 'random_state': 2,
+                   'min_samples_split': 5}
+params = dict(original_params)
+forest2 = GradientBoostingClassifier(**params)
+forest2 = forest2.fit( train_data[0::,1::], train_data[0::,0] )
+output = forest2.predict(test_data).astype(int)
 
-
-
-
-predictions_file = open("mysecondforest.csv", "wb")
+'''
+predictions_file = open("mysixthforest.csv", "wb")
 open_file_object = csv.writer(predictions_file)
 open_file_object.writerow(["PassengerId","Survived"])
 open_file_object.writerows(zip(ids, output))
