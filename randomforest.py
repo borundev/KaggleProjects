@@ -87,12 +87,16 @@ test_data = test_df.values
 
 print 'Training...'
 
+'''
 #fifthforest
-# rf = RandomForestClassifier(n_estimators = 100)
-# rf_enc = OneHotEncoder()
-# rf_lm = LogisticRegression()
-# rf = rf.fit( train_data[0::,1::], train_data[0::,0] )
-# rf_enc.fit(rf.apply(train_data[0::,1::]))
+#Encoder and Logestic Regression combined with Random Forest
+rf = RandomForestClassifier(n_estimators = 100)
+rf_enc = OneHotEncoder()
+rf_lm = LogisticRegression()
+rf = rf.fit( train_data[0::,1::], train_data[0::,0] )
+rf_enc.fit(rf.apply(train_data[0::,1::]))
+'''
+
 X_train = train_data[0::,1::]
 y_train = train_data[0::,0]
 X_test = test_data
@@ -104,6 +108,7 @@ X_train, X_train_lr, y_train, y_train_lr = train_test_split(X_train,
 # y_pred_rf_lm = rf_lm.predict_proba(rf_enc.transform(rf.apply(X_test)))[:, 1]
 
 #sixthforestt
+#Encoder and Logestic Regression combined with Gradient Boosting Classifier
 n_estimator = 10
 grd = GradientBoostingClassifier(n_estimators=n_estimator)
 grd_enc = OneHotEncoder()
@@ -120,6 +125,7 @@ output = grd_lm.predict(grd_enc.transform(grd.apply(X_test)[:, :, 0])).astype(in
 
 '''
 #secondforest (in git)
+#Cross Validation 
 train_size = int(0.7*(train_data.shape[0]))
 validation_size = train_data.shape[0] - train_size
 
@@ -139,6 +145,7 @@ print 'Predicting...'
 
 '''
 #thirdforest
+#K-Fold Cross Validation
 X = train_data[0::,1::]
 y = train_data[0::,0]
 k_fold = KFold(10, n_folds=3)
@@ -146,8 +153,10 @@ for k, (train,test) in enumerate(k_fold):
     forest.fit(X[train], y[train])
 output = forest.predict(test_data).astype(int)
 '''
+
 '''
 #fourthforest.csv
+#Gradient Boosting Tree Used.
 original_params = {'n_estimators': 1000, 'max_leaf_nodes': 4, 'max_depth': None, 'random_state': 2,
                    'min_samples_split': 5}
 params = dict(original_params)
